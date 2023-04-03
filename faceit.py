@@ -1,7 +1,36 @@
+#!/usr/bin/env python3
+# faceit.py
+# ----------------------------------------------------------------------------
+# Author: Nicholas Price
+# Last Modified: 4/3/2023
+# version '1.0.0'
+# ---------------------------------------------------------------------------
+# Description
+# This file is the main driver for the scraping of 2014 CSGO hub data. A
+# session is first established with the faceit API. From there calls are made
+# to the API to retrieve hub match data. The data is parsed for each player
+# and the final result is inserted into a CSV and saved to the 2014FACEIT folder.
+# ---------------------------------------------------------------------------
+
 import requests
 import config
 import endpoints
 import csv
+
+def convertPlayerDataToCSV(players):
+    print('Converting data to CSV')
+    header = sorted(list(dict(list(players.values())[0]).keys()))
+    data = []
+
+    for p in players:
+        temp = dict(sorted(dict(players[p]).items()))
+        data.append(list(temp.values()))
+    
+    print('Writing to CSV file')
+    with open('2014hubdata.csv', 'w', encoding='UTF8', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+        writer.writerows(data)
 
 
 def get2014HubMatches(limit=42069):
@@ -91,18 +120,7 @@ def get2014HubMatches(limit=42069):
             players[p]['username'] = playerData.json()['nickname']
 
     # Final processing to send player data to a csv file #
-    header = sorted(list(dict(list(players.values())[0]).keys()))
-        
-    data = []
-
-    for p in players:
-        temp = dict(sorted(dict(players[p]).items()))
-        data.append(list(temp.values()))
-        
-    with open('2014hubdata.csv', 'w', encoding='UTF8', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(header)
-        writer.writerows(data)
+    convertPlayerDataToCSV(players)
     
 
 def printHubMembers():
@@ -118,7 +136,7 @@ if __name__ == '__main__':
     ##### Establish a session #####
     headers = {
         'accept': 'application/json',
-        'Authorization': config.bKey
+        'Authorization': config.bPlusKey
     }
 
     s = requests.Session()

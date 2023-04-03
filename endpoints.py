@@ -1,3 +1,15 @@
+#!/usr/bin/env python3
+# endpoints.py
+# ----------------------------------------------------------------------------
+# Author: Nicholas Price
+# Last Modified: 4/3/2023
+# version '1.0.0'
+# ---------------------------------------------------------------------------
+# Description
+# This file documents the endpoints interacted with. The main purpose of this
+# documentation is to allow for easy changes for any API updates or to
+# add/subtract endpoints in the future. 
+# ---------------------------------------------------------------------------
 
 faceit2014hub = '6439e8de-340a-4325-b02f-9fe1758b9de8'
 
