@@ -12,10 +12,7 @@
 # and the final result is inserted into a CSV and saved to the 2014FACEIT folder.
 # ---------------------------------------------------------------------------
 
-import requests
-import config
 import endpoints
-import csvdataconvert
 
 
 # List of the stats we care to calculate from match data (potential conflict with final stats in csv vs player data we scrub from matches)
@@ -92,14 +89,15 @@ def processMatchData(matchDataJSON, players):
 #   dictionary of all the players who haved played and their overall statistics   
 # hubMatchesJSON : Dictionary   : key, value pairs contain all match information
 # players        : Dictionary   : key, value pairs contain player ID and their lifetime statistics
-def processHubMatches(hubMatchesJSON, players):
+# session        : Session      : used to authenticate with the api
+def processHubMatches(hubMatchesJSON, players, session):
     print('There are', len(hubMatchesJSON['items']), 'matches to process')
     matchSuccessCount = 0
     matchFailedCount = 0
 
     # For loop to process all matches
     for matchToProcess in hubMatchesJSON['items']:
-        matchDataResponse = s.get(endpoints.matchStats(matchToProcess['match_id']))   
+        matchDataResponse = session.get(endpoints.matchStats(matchToProcess['match_id']))   
         if not matchDataResponse.status_code == 200:
             # Signifies match was not found #
             if matchDataResponse.status_code == 404:
@@ -123,10 +121,11 @@ def processHubMatches(hubMatchesJSON, players):
 # Description: This function seeks to add each up to date nickname to the players
 #   data. 
 # players   : Dictionary   : key, value pairs contain player ID and their lifetime statistics
-def addPlayerNicknamesToDict(players):
+# session   : Session      : used to authenticate with the api
+def addPlayerNicknamesToDict(players, session):
     # Loop to add the current player nicknames to the players dictionary
     for p in players:
-        playerData = s.get(endpoints.playerByID(p))
+        playerData = session.get(endpoints.playerByID(p))
         if not playerData.status_code == 200:
             print('Error retrieving player nickname', playerData.status_code, '\n')
             quit()
@@ -138,31 +137,33 @@ def addPlayerNicknamesToDict(players):
 
 # Description: Given a hub ID, process all of the match data from every match played in the hub and return a
 #   dictionary of all the players who haved played and their overall statistics  
-# hubID  : String   : the unique ID of the faceit hub to pull matches from 
-# offset : Int      : the number of matches you want to skip processing for
-# limit  : Int      : the number of matches you want to process at most
-def getHubMatches(hubID, players, offset=0, limit=42069):
+# hubID     : String        : the unique ID of the faceit hub to pull matches from 
+# players   : Dictionary    : key, value pairs contain player ID and their lifetime statistics
+# session   : Session       : used to authenticate with the api
+# offset    : Int           : the number of matches you want to skip processing for
+# limit     : Int           : the number of matches you want to process at most
+def getHubMatches(hubID, players, session, offset=0, limit=42069):
     params = {
         'offset': offset,
         'limit': limit
     }
 
-    # Hit the endpoint to retrieve all hub matches #
-    hubMatchesResponse = s.get(endpoints.getHubMatches(hubID), params=params)
+    # Hit the hub matches endpoint to retrieve all hub matches #
+    hubMatchesResponse = session.get(endpoints.getHubMatches(hubID), params=params)
     if not hubMatchesResponse.status_code == 200:
         print('Error getting members with error code', hubMatchesResponse.status_code, '\n')
         quit()
     
-    players = processHubMatches(hubMatchesResponse.json(), players)
-    players = addPlayerNicknamesToDict(players)
-
+    players = processHubMatches(hubMatchesResponse.json(), players, session)
+    players = addPlayerNicknamesToDict(players, session)
     return players
 
 
 # Description: Given a hub ID, process all of the match data from every match played in the hub and return a
 #   dictionary of all the players who haved played and their overall statistics 
-def printHubMembers():
-    response = s.get(endpoints.hubMembers)
+# session   : Session   : used to authenticate with the api
+def printHubMembers(session):
+    response = session.get(endpoints.hubMembers)
     if not response.status_code == 200:
         print('Error getting members with error code', response.status_code, '\n')
     else:
