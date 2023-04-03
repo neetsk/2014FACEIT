@@ -2,6 +2,7 @@ import requests
 import config
 import endpoints
 import json
+import csv
 
 if __name__ == '__main__':
     ##### Establish a session #####
@@ -19,7 +20,7 @@ if __name__ == '__main__':
 
     params = {
         'offset': 0,
-        'limit': 999
+        'limit': 999 #change to 999
     }
     hubMatches = s.get(endpoints.hubMatches, params=params)
     if not hubMatches.status_code == 200:
@@ -51,6 +52,7 @@ if __name__ == '__main__':
                         stats['Rounds Won'] = roundsWon
                         stats['Rounds Played'] = numRounds
                         stats['Games Won'] = gameWon
+                        stats['Games Played'] = 1
                         if playerID in players:
                             # add stats
                             shortcut = players[playerID]
@@ -65,8 +67,10 @@ if __name__ == '__main__':
                             shortcut['Rounds Won'] = int(shortcut['Rounds Won']) + int(stats['Rounds Won'])
                             shortcut['Rounds Played'] = int(shortcut['Rounds Played']) + int(stats['Rounds Played'])
                             shortcut['Games Won'] = int(shortcut['Games Won']) + int(stats['Games Won'])
+                            shortcut['Games Played'] += 1
                         else:
                             players[playerID] = stats
+                            players[playerID].pop('player_id')
                 print(matchToProcess['match_id'], ': success')
                 matchSuccessCount += 1
             else:
@@ -76,7 +80,26 @@ if __name__ == '__main__':
                     matchFailedCount += 1
         print(matchSuccessCount, 'matches successfully processed')
         print(matchFailedCount, 'matches failed to process')
-        print(players)
+        #print(players)
+
+        for p in players:
+            playerData = s.get(endpoints.playerByID(p))
+            if not playerData.status_code == 200:
+                print("error")
+            else:
+                players[p]['username'] = playerData.json()['nickname']
+
+        ##### Final Processing #####
+        header = list(dict(list(players.values())[0]).keys())
+        data = []
+        
+        for p in players:
+            data.append(list(dict(players[p]).values()))
+        
+        with open('2014hubdata.csv', 'w', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
+            writer.writerows(data)
 
 
 
