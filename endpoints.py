@@ -1,7 +1,7 @@
 
 faceit2014hub = '6439e8de-340a-4325-b02f-9fe1758b9de8'
 
-faceitapi = 'https://open.faceit.com/data/v4/'
+faceitapi = 'https://open.faceit.com/data/v4'
 
 ##### Hubs #####
 # Retrieve hub details
