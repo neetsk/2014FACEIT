@@ -18,29 +18,23 @@ import endpoints
 import csvdataconvert
 
 
+# List of the stats we care to calculate from match data (potential conflict with final stats in csv vs player data we scrub from matches)
+statList = ['Kills', 'Assists', 'Quadro Kills', 'MVPs', 'Headshots', 'Penta Kills', 'Triple Kills', 
+                    'Deaths', 'Rounds Won', 'Rounds Played', 'Games Won', 'Games Played']
+
+
 # Description: Take statistics from a player's match and update their lifetime statistics based on
 #   their player ID.
 # stats     : Dictionary    : key, value pairs contain player data from a match
 # players   : Dictionary    : key, value pairs contain player ID and their lifetime statistics
 # playerID  : String        : the faceit ID of the player to update
-def mutatePlayerData(stats, players, playerID):
+def addToPlayerData(stats, players, playerID):
     # If the player already exists in the dictionary, add their stats
-    # o.w. add the player to the dictionary
+    # Else add the player to the dictionary
     if playerID in players:
-        # add stats
-        shortcut = players[playerID]
-        shortcut['Kills'] = int(shortcut['Kills']) + int(stats['Kills'])
-        shortcut['Assists'] = int(shortcut['Assists']) + int(stats['Assists'])
-        shortcut['Quadro Kills'] = int(shortcut['Quadro Kills']) + int(stats['Quadro Kills'])
-        shortcut['MVPs'] = int(shortcut['MVPs']) + int(stats['MVPs'])
-        shortcut['Headshots'] = int(shortcut['Headshots']) + int(stats['Headshots'])
-        shortcut['Penta Kills'] = int(shortcut['Penta Kills']) + int(stats['Penta Kills'])
-        shortcut['Triple Kills'] = int(shortcut['Triple Kills']) + int(stats['Triple Kills'])
-        shortcut['Deaths'] = int(shortcut['Deaths']) + int(stats['Deaths'])
-        shortcut['Rounds Won'] = int(shortcut['Rounds Won']) + int(stats['Rounds Won'])
-        shortcut['Rounds Played'] = int(shortcut['Rounds Played']) + int(stats['Rounds Played'])
-        shortcut['Games Won'] = int(shortcut['Games Won']) + int(stats['Games Won'])
-        shortcut['Games Played'] += 1
+        # Add stats based on the statList
+        for i in range(len(statList)):
+            players[playerID][statList[i]] = int(players[playerID][statList[i]]) + int(stats[statList[i]])
     else:
         players[playerID] = stats
     return players
@@ -56,7 +50,7 @@ def processMatchData(teamData, numRounds, players):
         print('Error: No data contained in the teamData argument of processMatchData')
         quit()
     
-    # Assign rounds won and if the player won to each team
+    # Assign rounds won and match result to each player
     roundsWon = teamData['team_stats']['Final Score']
     gameWon = teamData['team_stats']['Team Win']
     # Parse data for each player on the team
@@ -68,18 +62,31 @@ def processMatchData(teamData, numRounds, players):
         stats.pop('K/R Ratio')
         stats.pop('Headshots %')
         stats.pop('Result')
+        # Add in extra stats
         stats['Rounds Won'] = roundsWon
         stats['Rounds Played'] = numRounds
         stats['Games Won'] = gameWon
         stats['Games Played'] = 1
-        players = mutatePlayerData(stats, players, playerID)
+        # Add data collected to current player data
+        players = addToPlayerData(stats, players, playerID)
+    # return the player data after mutation
+    return players
+
+
+def processTeamData(matchDataJSON, players):
+    roundsJSON = matchDataJSON['rounds'][0]
+    numRounds = roundsJSON['round_stats']['Rounds']
+    # Scrape stats for both teams in the match
+    for teamData in roundsJSON['teams']:
+        # could split this into list of dicts of teams and process data that way
+        players = processMatchData(teamData, numRounds, players)
     return players
 
 
 # Description: Given a list of all the matches played in a faceit hub, return a
 #   dictionary of all the players who haved played and their overall statistics   
 # hubMatchesJSON : Dictionary   : key, value pairs contain all match information
-def processPlayerData(hubMatchesJSON):
+def processHubMatches(hubMatchesJSON):
     # Dictionary of all data in hub for each player (player_id : stats)
     players = {}
 
@@ -93,25 +100,23 @@ def processPlayerData(hubMatchesJSON):
         if not matchDataResponse.status_code == 200:
             # Signifies match was not found #
             if matchDataResponse.status_code == 404:
-                print(matchToProcess['match_id'], ': match failed [', matchDataResponse.status_code, ']')
+                print(matchToProcess['match_id'], ': failed to process match [', matchDataResponse.status_code, ']')
                 matchFailedCount += 1
             else:
                 print('Error getting match data, not cancelled or successful', matchDataResponse.status_code, '\n')
                 quit()
         else:
             # Match was found so now we scrape data
-            roundsJSON = matchDataResponse.json()['rounds'][0]
-            numRounds = roundsJSON['round_stats']['Rounds']
-            # Scrape stats for both teams in the match
-            for teamData in roundsJSON['teams']:
-                players = processMatchData(teamData, numRounds, players)
+            # Process each team first
+            players = processTeamData(matchDataResponse.json(), players)
             matchSuccessCount += 1
-            print(matchToProcess['match_id'], ': successfully processed[', matchDataResponse.status_code, ']')
+            print(matchToProcess['match_id'], ': successfully processed match [', matchDataResponse.status_code, ']')
 
     # Final amount of matches processed
     print(matchSuccessCount, 'matches successfully processed')
     print(matchFailedCount, 'matches failed to process')
     return players
+
 
 # Description: Given a hub ID, process all of the match data from every match played in the hub and return a
 #   dictionary of all the players who haved played and their overall statistics  
@@ -130,7 +135,7 @@ def getHubMatches(hubID, offset=0, limit=42069):
         print('Error getting members with error code', hubMatchesResponse.status_code, '\n')
         quit()
     
-    players = processPlayerData(hubMatchesResponse.json())
+    players = processHubMatches(hubMatchesResponse.json())
 
     # Loop to add the current player nicknames to the players dictionary
     for p in players:
@@ -142,17 +147,7 @@ def getHubMatches(hubID, offset=0, limit=42069):
             players[p]['username'] = playerData.json()['nickname']
 
     # Final processing to send player data to a csv file #
-    #csvdataconvert.convertPlayerDataToCSV(players)
-    return
-    
-
-def printHubMembers():
-    response = s.get(endpoints.hubMembers)
-    if not response.status_code == 200:
-        print('Error getting members with error code', response.status_code, '\n')
-    else:
-        #print(response.json())
-        print('members')
+    csvdataconvert.convertPlayerDataToCSV(players)
     return
 
 
@@ -171,6 +166,16 @@ if __name__ == '__main__':
         print("Authentication not successful")
         quit()
     
-    # 
-    getHubMatches(endpoints.faceit2014hub)
+    getHubMatches(endpoints.faceit2014hubID)
+
+
+# Description: Given a hub ID, process all of the match data from every match played in the hub and return a
+#   dictionary of all the players who haved played and their overall statistics 
+def printHubMembers():
+    response = s.get(endpoints.hubMembers)
+    if not response.status_code == 200:
+        print('Error getting members with error code', response.status_code, '\n')
+    else:
+        #print(response.json())
+        print('members')
     return
