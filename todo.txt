@@ -1,0 +1,8 @@
+1. Reformat spreadsheet to this order
+username games won games played kills deaths assists damage??? ADR??? rounds played rounds won 3k 4k 5k mvp headshot 
+2. Add stats to spreadsheet
+winrate hs% KAST???
+3. Display tournament bracket
+4. Display tournament stats similar to hub
+5. Discord bot commands
+
