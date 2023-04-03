@@ -19,3 +19,10 @@ matches = faceitapi + '/matches'
 # Retrieve Match Statistics
 def matchStats(match):
     return matches + '/' + match + '/stats'
+
+##### Players #####
+# Retrieve player details
+player = faceitapi + '/players'
+# Retrieve player details
+def playerByID(playerID):
+    return player + '/' + playerID
