@@ -45,11 +45,7 @@ def addToPlayerData(stats, players, playerID):
 # teamData  : Dictionary    : key, value pairs contain team specific data and the team_stats key contains player statistics
 # numRounds : Int           : the total number of rounds played in the match
 # players   : Dictionary    : key, value pairs contain player ID and their lifetime statistics
-def processMatchData(teamData, numRounds, players):
-    if teamData == None:
-        print('Error: No data contained in the teamData argument of processMatchData')
-        quit()
-    
+def processTeamData(teamData, numRounds, players):
     # Assign rounds won and match result to each player
     roundsWon = teamData['team_stats']['Final Score']
     gameWon = teamData['team_stats']['Team Win']
@@ -73,23 +69,30 @@ def processMatchData(teamData, numRounds, players):
     return players
 
 
-def processTeamData(matchDataJSON, players):
+# Description: Process a team's player data and return the updated players dictionary containing
+#   universal statistics for the player in the hub 
+# teamData  : Dictionary    : key, value pairs contain team specific data and the team_stats key contains player statistics
+# numRounds : Int           : the total number of rounds played in the match
+# players   : Dictionary    : key, value pairs contain player ID and their lifetime statistics
+def processMatchData(matchDataJSON, players):
+    if matchDataJSON == None:
+        print('Error: No data contained in the matchDataJSON argument of processMatchData')
+        quit()
+    
     roundsJSON = matchDataJSON['rounds'][0]
     numRounds = roundsJSON['round_stats']['Rounds']
     # Scrape stats for both teams in the match
     for teamData in roundsJSON['teams']:
         # could split this into list of dicts of teams and process data that way
-        players = processMatchData(teamData, numRounds, players)
+        players = processTeamData(teamData, numRounds, players)
     return players
 
 
 # Description: Given a list of all the matches played in a faceit hub, return a
 #   dictionary of all the players who haved played and their overall statistics   
 # hubMatchesJSON : Dictionary   : key, value pairs contain all match information
-def processHubMatches(hubMatchesJSON):
-    # Dictionary of all data in hub for each player (player_id : stats)
-    players = {}
-
+# players        : Dictionary   : key, value pairs contain player ID and their lifetime statistics
+def processHubMatches(hubMatchesJSON, players):
     print('There are', len(hubMatchesJSON['items']), 'matches to process')
     matchSuccessCount = 0
     matchFailedCount = 0
@@ -107,8 +110,7 @@ def processHubMatches(hubMatchesJSON):
                 quit()
         else:
             # Match was found so now we scrape data
-            # Process each team first
-            players = processTeamData(matchDataResponse.json(), players)
+            players = processMatchData(matchDataResponse.json(), players)
             matchSuccessCount += 1
             print(matchToProcess['match_id'], ': successfully processed match [', matchDataResponse.status_code, ']')
 
@@ -123,7 +125,7 @@ def processHubMatches(hubMatchesJSON):
 # hubID  : String   : the unique ID of the faceit hub to pull matches from 
 # offset : Int      : the number of matches you want to skip processing for
 # limit  : Int      : the number of matches you want to process at most
-def getHubMatches(hubID, offset=0, limit=42069):
+def getHubMatches(hubID, players, offset=0, limit=42069):
     params = {
         'offset': offset,
         'limit': limit
@@ -135,7 +137,9 @@ def getHubMatches(hubID, offset=0, limit=42069):
         print('Error getting members with error code', hubMatchesResponse.status_code, '\n')
         quit()
     
-    players = processHubMatches(hubMatchesResponse.json())
+    players = processHubMatches(hubMatchesResponse.json(), players)
+
+    ## COME BACK TO THIS ##
 
     # Loop to add the current player nicknames to the players dictionary
     for p in players:
@@ -146,9 +150,8 @@ def getHubMatches(hubID, offset=0, limit=42069):
         else:
             players[p]['username'] = playerData.json()['nickname']
 
-    # Final processing to send player data to a csv file #
-    csvdataconvert.convertPlayerDataToCSV(players)
-    return
+    ## COME BACK TO THIS ##
+    return players
 
 
 if __name__ == '__main__':
@@ -166,7 +169,12 @@ if __name__ == '__main__':
         print("Authentication not successful")
         quit()
     
-    getHubMatches(endpoints.faceit2014hubID)
+    players = {}
+
+    getHubMatches(endpoints.faceit2014hubID, players)
+
+    # Final processing to send player data to a csv file #
+    csvdataconvert.convertPlayerDataToCSV(players)
 
 
 # Description: Given a hub ID, process all of the match data from every match played in the hub and return a
