@@ -12,3 +12,10 @@ hubMatches = hubs + '/matches'
 hubMembers = hubs + '/members'
 # Retrieve statistics of a hub
 hubStats = hubs + '/stats'
+
+##### Matches #####
+# Retrieve match details
+matches = faceitapi + '/matches'
+# Retrieve Match Statistics
+def matchStats(match):
+    return matches + '/' + match + '/stats'

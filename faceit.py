@@ -1,6 +1,7 @@
 import requests
 import config
 import endpoints
+import json
 
 if __name__ == '__main__':
     ##### Establish a session #####
@@ -16,11 +17,68 @@ if __name__ == '__main__':
         print("Authentication not successful")
         quit()
 
-    response = s.get(endpoints.hubMatches)
-    if not response.status_code == 200:
-        print('Error getting members with error code', response.status_code, '\n')
+    params = {
+        'offset': 0,
+        'limit': 999
+    }
+    hubMatches = s.get(endpoints.hubMatches, params=params)
+    if not hubMatches.status_code == 200:
+        print('Error getting members with error code', hubMatches.status_code, '\n')
     else:
-        print(response.json())
+        #1-717ab86d-38ef-47a4-a941-b19ab5b0fa36
+        players = {}
+
+        print('There are', len(hubMatches.json()['items']), 'matches to process')
+        matchSuccessCount = 0
+        matchFailedCount = 0
+        for matchToProcess in hubMatches.json()['items']:
+            matchData = s.get(endpoints.matchStats(matchToProcess['match_id']))
+            if matchData.status_code == 200:
+                roundsJSON = matchData.json()['rounds'][0]
+                numRounds = roundsJSON['round_stats']['Rounds']
+
+                for y in roundsJSON['teams']:
+                    roundsWon = y['team_stats']['Final Score']
+                    gameWon = y['team_stats']['Team Win']
+                    for x in y['players']:
+                        playerID = x['player_id']
+                        stats = x['player_stats']
+                        stats.pop('K/D Ratio')
+                        stats.pop('K/R Ratio')
+                        stats.pop('Headshots %')
+                        stats.pop('Result')
+                        stats['player_id'] = playerID
+                        stats['Rounds Won'] = roundsWon
+                        stats['Rounds Played'] = numRounds
+                        stats['Games Won'] = gameWon
+                        if playerID in players:
+                            # add stats
+                            shortcut = players[playerID]
+                            shortcut['Kills'] = int(shortcut['Kills']) + int(stats['Kills'])
+                            shortcut['Assists'] = int(shortcut['Assists']) + int(stats['Assists'])
+                            shortcut['Quadro Kills'] = int(shortcut['Quadro Kills']) + int(stats['Quadro Kills'])
+                            shortcut['MVPs'] = int(shortcut['MVPs']) + int(stats['MVPs'])
+                            shortcut['Headshots'] = int(shortcut['Headshots']) + int(stats['Headshots'])
+                            shortcut['Penta Kills'] = int(shortcut['Penta Kills']) + int(stats['Penta Kills'])
+                            shortcut['Triple Kills'] = int(shortcut['Triple Kills']) + int(stats['Triple Kills'])
+                            shortcut['Deaths'] = int(shortcut['Deaths']) + int(stats['Deaths'])
+                            shortcut['Rounds Won'] = int(shortcut['Rounds Won']) + int(stats['Rounds Won'])
+                            shortcut['Rounds Played'] = int(shortcut['Rounds Played']) + int(stats['Rounds Played'])
+                            shortcut['Games Won'] = int(shortcut['Games Won']) + int(stats['Games Won'])
+                        else:
+                            players[playerID] = stats
+                print(matchToProcess['match_id'], ': success')
+                matchSuccessCount += 1
+            else:
+                ##### Signifies match was cancelled #####
+                if matchData.status_code == 404:
+                    print(matchToProcess['match_id'], ': match failed [', matchData.status_code, ']')
+                    matchFailedCount += 1
+        print(matchSuccessCount, 'matches successfully processed')
+        print(matchFailedCount, 'matches failed to process')
+        print(players)
+
+
 
 
 def printHubMembers():
@@ -28,4 +86,5 @@ def printHubMembers():
     if not response.status_code == 200:
         print('Error getting members with error code', response.status_code, '\n')
     else:
-        print(response.json())
+        #print(response.json())
+        print('members')
