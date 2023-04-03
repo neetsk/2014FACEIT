@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     params = {
         'offset': 0,
-        'limit': 999 #change to 999
+        'limit': 42069 #change to 999
     }
     hubMatches = s.get(endpoints.hubMatches, params=params)
     if not hubMatches.status_code == 200:
@@ -90,11 +90,13 @@ if __name__ == '__main__':
                 players[p]['username'] = playerData.json()['nickname']
 
         ##### Final Processing #####
-        header = list(dict(list(players.values())[0]).keys())
-        data = []
+        header = sorted(list(dict(list(players.values())[0]).keys()))
         
+        data = []
+
         for p in players:
-            data.append(list(dict(players[p]).values()))
+            temp = dict(sorted(dict(players[p]).items()))
+            data.append(list(temp.values()))
         
         with open('2014hubdata.csv', 'w', encoding='UTF8', newline='') as f:
             writer = csv.writer(f)
