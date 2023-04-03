@@ -17,13 +17,17 @@ faceitapi = 'https://open.faceit.com/data/v4'
 
 ##### Hubs #####
 # Retrieve hub details
-hubs = faceitapi + '/hubs/' + faceit2014hub
+def getHubDetails(hubID=faceit2014hub):
+    return faceitapi + '/hubs/' + hubID
 # Retrieve all matches of a hub
-hubMatches = hubs + '/matches'
+def getHubMatches(hubID):
+    return getHubDetails(hubID) + '/matches'
 # Retrieve all members of a hub
-hubMembers = hubs + '/members'
+def getHubMembers(hubID):
+    return getHubDetails(hubID) + '/members'
 # Retrieve statistics of a hub
-hubStats = hubs + '/stats'
+def getHubStatistics(hubID):
+    return getHubDetails(hubID) + '/stats'
 
 ##### Matches #####
 # Retrieve match details
