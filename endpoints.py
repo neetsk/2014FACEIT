@@ -11,13 +11,13 @@
 # add/subtract endpoints in the future. 
 # ---------------------------------------------------------------------------
 
-faceit2014hub = '6439e8de-340a-4325-b02f-9fe1758b9de8'
+faceit2014hubID = '6439e8de-340a-4325-b02f-9fe1758b9de8'
 
 faceitapi = 'https://open.faceit.com/data/v4'
 
 ##### Hubs #####
 # Retrieve hub details
-def getHubDetails(hubID=faceit2014hub):
+def getHubDetails(hubID=faceit2014hubID):
     return faceitapi + '/hubs/' + hubID
 # Retrieve all matches of a hub
 def getHubMatches(hubID):
