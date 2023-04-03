@@ -1,6 +1,16 @@
 import requests
+import config
+import endpoints
 
-response = requests.get("https://api.open-notify.org/this-api-doesnt-exist")
-print(response.status_code)
+headers = {
+    'Bearer': config.api_key
+}
 
-print("hi")
+response = requests.get(endpoints.faceitapi, headers=headers);
+print(response)
+
+response = requests.get(endpoints.hubMembers)
+if not response.status_code == 200:
+    print('Error getting members with error code', response.status_code, '\n')
+else:
+    print(response.json())
