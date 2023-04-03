@@ -120,6 +120,22 @@ def processHubMatches(hubMatchesJSON, players):
     return players
 
 
+# Description: This function seeks to add each up to date nickname to the players
+#   data. 
+# players   : Dictionary   : key, value pairs contain player ID and their lifetime statistics
+def addPlayerNicknamesToDict(players):
+    # Loop to add the current player nicknames to the players dictionary
+    for p in players:
+        playerData = s.get(endpoints.playerByID(p))
+        if not playerData.status_code == 200:
+            print('Error retrieving player nickname', playerData.status_code, '\n')
+            quit()
+        else:
+            players[p]['username'] = playerData.json()['nickname']
+    # Return with nicknames added to dict        
+    return players
+
+
 # Description: Given a hub ID, process all of the match data from every match played in the hub and return a
 #   dictionary of all the players who haved played and their overall statistics  
 # hubID  : String   : the unique ID of the faceit hub to pull matches from 
@@ -138,43 +154,9 @@ def getHubMatches(hubID, players, offset=0, limit=42069):
         quit()
     
     players = processHubMatches(hubMatchesResponse.json(), players)
+    players = addPlayerNicknamesToDict(players)
 
-    ## COME BACK TO THIS ##
-
-    # Loop to add the current player nicknames to the players dictionary
-    for p in players:
-        playerData = s.get(endpoints.playerByID(p))
-        if not playerData.status_code == 200:
-            print('Error retrieving player nicknames', playerData.status_code, '\n')
-            quit()
-        else:
-            players[p]['username'] = playerData.json()['nickname']
-
-    ## COME BACK TO THIS ##
     return players
-
-
-if __name__ == '__main__':
-    # Establish a session #
-    headers = {
-        'accept': 'application/json',
-        'Authorization': config.bPlusKey
-    }
-
-    # Instantiate a session object #
-    s = requests.Session()
-    s.headers.update(headers)
-    response = s.get(endpoints.faceitapi + '/games?offset=0&limit=0')
-    if not response.status_code == 200:
-        print("Authentication not successful")
-        quit()
-    
-    players = {}
-
-    getHubMatches(endpoints.faceit2014hubID, players)
-
-    # Final processing to send player data to a csv file #
-    csvdataconvert.convertPlayerDataToCSV(players)
 
 
 # Description: Given a hub ID, process all of the match data from every match played in the hub and return a
