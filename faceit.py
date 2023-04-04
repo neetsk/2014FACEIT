@@ -136,7 +136,7 @@ def addPlayerNicknamesToDict(players, session):
 
 # Description: Given a hub ID, process all of the match data from every match played in the hub and return a
 #   dictionary of all the players who haved played and their overall statistics  
-# hubID     : String        : the unique ID of the faceit hub to pull matches from 
+# hubID     : String        : the unique ID of the faceit hub
 # players   : Dictionary    : key, value pairs contain player ID and their lifetime statistics
 # session   : Session       : used to authenticate with the api
 # offset    : Int           : the number of matches you want to skip processing for
@@ -150,22 +150,22 @@ def getHubMatches(hubID, players, session, offset=0, limit=42069):
     # Hit the hub matches endpoint to retrieve all hub matches #
     hubMatchesResponse = session.get(endpoints.getHubMatches(hubID), params=params)
     if not hubMatchesResponse.status_code == 200:
-        print('Error getting members with error code', hubMatchesResponse.status_code, '\n')
+        print('Error getting hub matches with error code', hubMatchesResponse.status_code, '\n')
         quit()
     
-    players = processHubMatches(hubMatchesJSON=hubMatchesResponse.json(), players=players, session=session)
+    players = processHubMatches(hubMatchesJSON=hubMatchesResponse.json(), players=players, session=session, offset=offset, limit=limit)
     players = addPlayerNicknamesToDict(players=players, session=session)
     return players
 
 
 # Description: Given a hub ID, process all of the match data from every match played in the hub and return a
 #   dictionary of all the players who haved played and their overall statistics 
+# hubID     : String    : the unique ID of the faceit hub 
 # session   : Session   : used to authenticate with the api
-def printHubMembers(session):
-    response = session.get(endpoints.hubMembers)
+def printHubMembersInfo(hubID, session):
+    response = session.get(endpoints.getHubMembers(hubID))
     if not response.status_code == 200:
         print('Error getting members with error code', response.status_code, '\n')
     else:
-        #print(response.json())
-        print('members')
+        print(response.json())
     return

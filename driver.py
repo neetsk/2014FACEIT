@@ -33,7 +33,15 @@ if __name__ == '__main__':
     # Players dictionary is used to return total statistics based on faceit query type #
     players = {}
 
-    faceit.getHubMatches(endpoints.faceit2014hubID, players, session)
+    '''
+    offset = 0
+    limit = 0
+    faceit.getHubMatches(hubID=endpoints.faceit2014hubID, players=players, session=session)
+    '''
+
+    faceit.printHubMembersInfo(hubID=endpoints.faceit2014hubID, session=session)
+    
+    #faceit.getHubMatches(hubID=endpoints.faceit2014hubID, players=players, session=session)
 
     # Final processing to send player data to a csv file #
-    csvdataconvert.convertPlayerDataToCSV(players)
+    #csvdataconvert.convertPlayerDataToCSV(players)
