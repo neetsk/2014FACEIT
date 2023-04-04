@@ -2,7 +2,7 @@
 # csvdataconvert.py
 # ----------------------------------------------------------------------------
 # Author: Nicholas Price
-# Last Modified: 4/4/2023
+# Last Modified: 4/3/2023
 # version '1.0.0'
 # ---------------------------------------------------------------------------
 # Description
@@ -13,6 +13,8 @@
 import csv
 
 
+# Description: Take statistics for each player and output their results in a .csv file
+# players   : Dictionary    : key, value pairs contain player ID and their lifetime statistics
 def convertPlayerDataToCSV(players):
     print('Converting data to CSV')
     header = sorted(list(dict(list(players.values())[0]).keys()))
@@ -27,3 +29,14 @@ def convertPlayerDataToCSV(players):
         writer = csv.writer(f)
         writer.writerow(header)
         writer.writerows(data)
+    print('Write to', f ,'complete')
+
+
+# Description: Take the data stored in a .csv file and convert it to a player dictionary
+# players   : Dictionary    : key, value pairs contain player ID and their lifetime statistics
+def convertCSVToPlayerData(filename):
+    players = {}
+
+    # write later #
+
+    return players

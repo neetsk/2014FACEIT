@@ -14,7 +14,6 @@
 
 import endpoints
 
-
 # List of the stats we care to calculate from match data (potential conflict with final stats in csv vs player data we scrub from matches)
 statList = ['Kills', 'Assists', 'Quadro Kills', 'MVPs', 'Headshots', 'Penta Kills', 'Triple Kills', 
                     'Deaths', 'Rounds Won', 'Rounds Played', 'Games Won', 'Games Played']
@@ -61,7 +60,7 @@ def processTeamData(teamData, numRounds, players):
         stats['Games Won'] = gameWon
         stats['Games Played'] = 1
         # Add data collected to current player data
-        players = addToPlayerData(stats, players, playerID)
+        players = addToPlayerData(stats=stats, players=players, playerID=playerID)
     # return the player data after mutation
     return players
 
@@ -81,7 +80,7 @@ def processMatchData(matchDataJSON, players):
     # Scrape stats for both teams in the match
     for teamData in roundsJSON['teams']:
         # could split this into list of dicts of teams and process data that way
-        players = processTeamData(teamData, numRounds, players)
+        players = processTeamData(teamData=teamData, numRounds=numRounds, players=players)
     return players
 
 
@@ -108,7 +107,7 @@ def processHubMatches(hubMatchesJSON, players, session):
                 quit()
         else:
             # Match was found so now we scrape data
-            players = processMatchData(matchDataResponse.json(), players)
+            players = processMatchData(matchDataJSON=matchDataResponse.json(), players=players)
             matchSuccessCount += 1
             print(matchToProcess['match_id'], ': successfully processed match [', matchDataResponse.status_code, ']')
 
@@ -154,8 +153,8 @@ def getHubMatches(hubID, players, session, offset=0, limit=42069):
         print('Error getting members with error code', hubMatchesResponse.status_code, '\n')
         quit()
     
-    players = processHubMatches(hubMatchesResponse.json(), players, session)
-    players = addPlayerNicknamesToDict(players, session)
+    players = processHubMatches(hubMatchesJSON=hubMatchesResponse.json(), players=players, session=session)
+    players = addPlayerNicknamesToDict(players=players, session=session)
     return players
 
 

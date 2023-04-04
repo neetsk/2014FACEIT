@@ -12,11 +12,8 @@
 # and the final result is inserted into a CSV and saved to the 2014FACEIT folder.
 # ---------------------------------------------------------------------------
 
-import config
 import requests
-import endpoints
-import csvdataconvert
-import faceit
+import config, endpoints, csvdataconvert, faceit
 
 if __name__ == '__main__':
     # Establish a session #
