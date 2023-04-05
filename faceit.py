@@ -153,7 +153,7 @@ def getHubMatches(hubID, players, session, offset=0, limit=42069):
         print('Error getting hub matches with error code', hubMatchesResponse.status_code, '\n')
         quit()
     
-    players = processHubMatches(hubMatchesJSON=hubMatchesResponse.json(), players=players, session=session, offset=offset, limit=limit)
+    players = processHubMatches(hubMatchesJSON=hubMatchesResponse.json(), players=players, session=session)
     players = addPlayerNicknamesToDict(players=players, session=session)
     return players
 

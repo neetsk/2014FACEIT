@@ -39,9 +39,9 @@ if __name__ == '__main__':
     faceit.getHubMatches(hubID=endpoints.faceit2014hubID, players=players, session=session)
     '''
 
-    faceit.printHubMembersInfo(hubID=endpoints.faceit2014hubID, session=session)
+    #faceit.printHubMembersInfo(hubID=endpoints.faceit2014hubID, session=session)
     
-    #faceit.getHubMatches(hubID=endpoints.faceit2014hubID, players=players, session=session)
+    faceit.getHubMatches(hubID=endpoints.faceit2014hubID, players=players, session=session)
 
     # Final processing to send player data to a csv file #
-    #csvdataconvert.convertPlayerDataToCSV(players)
+    csvdataconvert.convertPlayerDataToCSV(players)
