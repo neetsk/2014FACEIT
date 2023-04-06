@@ -75,7 +75,7 @@ def processMatchData(matchDataJSON, players):
         print('Error: No data contained in the matchDataJSON argument of processMatchData')
         quit()
     
-    roundsJSON = matchDataJSON['rounds'][0]
+    roundsJSON = matchDataJSON['rounds'][0] #modify this to work with multi round games
     numRounds = roundsJSON['round_stats']['Rounds']
     # Scrape stats for both teams in the match
     for teamData in roundsJSON['teams']:
